@@ -6,7 +6,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-let verificationCodes = {} // Temporary store
+let verificationCodes = {}
 
 app.post('/send-code', async (req, res) => {
   const { email } = req.body
@@ -18,8 +18,8 @@ app.post('/send-code', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'your@gmail.com',          // ✅ Your Gmail
-        pass: 'your-app-password'        // ✅ Gmail App Password
+        user: 'your@gmail.com',
+        pass: 'your-app-password'
       }
     })
 
@@ -38,24 +38,19 @@ app.post('/send-code', async (req, res) => {
   }
 })
 
-app.listen(3001, () => {
-  console.log('✅ Email backend running at http://localhost:3001')
-})
-
-
-
-// Verify Code Endpoint
 app.post('/verify-code', (req, res) => {
   const { email, code } = req.body
 
-  console.log(`Verifying code for ${email}: Entered=${code}, Expected=${verificationCodes[email]}`)
-
-  if (verificationCodes[email] === code) {
-    // ✅ Code Matched
-    delete verificationCodes[email]  // Optional: Clear code after verification
-    return res.status(200).json({ success: true })
+  if (verificationCodes[email] && verificationCodes[email] === code) {
+    delete verificationCodes[email] // Remove after verification
+    res.json({ success: true })
+  } else {
+    res.json({ success: false, message: 'Invalid code' })
   }
+})
 
-  // ❌ Code did not match
-  return res.status(400).json({ success: false, message: 'Invalid code' })
+// ⚠️ IMPORTANT: Use process.env.PORT for Render deployment
+const PORT = process.env.PORT || 3001
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`)
 })
